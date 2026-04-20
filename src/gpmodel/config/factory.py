@@ -17,6 +17,7 @@ from gpmodel.config.schema import (
     RtspConfig,
     RulesConfig,
     SourceConfig,
+    WeaponRuleConfig,
     WebcamConfig,
     YoloConfig,
 )
@@ -31,6 +32,7 @@ from gpmodel.publishers.metrics import MetricsSubscriber
 from gpmodel.rules.base import RulesEngine
 from gpmodel.rules.crowd import CrowdRule
 from gpmodel.rules.geofence import Geofence, GeofenceRule
+from gpmodel.rules.weapon import WeaponRule
 from gpmodel.sources.file import FileSource
 from gpmodel.sources.rtsp import RtspSource
 from gpmodel.sources.webcam import WebcamSource
@@ -116,9 +118,25 @@ def build_crowd_rule(cfg: CrowdRuleConfig) -> CrowdRule | None:
     )
 
 
+def build_weapon_rule(cfg: WeaponRuleConfig) -> WeaponRule | None:
+    if not cfg.enabled:
+        return None
+    return WeaponRule(
+        classes=frozenset(cfg.classes),
+        min_confidence=cfg.min_confidence,
+        min_consecutive_frames=cfg.min_consecutive_frames,
+        severity=AlertSeverity(cfg.severity),
+        cooldown_s=cfg.cooldown_s,
+    )
+
+
 def build_rules(cfg: RulesConfig) -> RulesEngine | None:
     engine = RulesEngine()
-    for rule in (build_geofence_rule(cfg.geofence), build_crowd_rule(cfg.crowd)):
+    for rule in (
+        build_geofence_rule(cfg.geofence),
+        build_crowd_rule(cfg.crowd),
+        build_weapon_rule(cfg.weapon),
+    ):
         if rule is not None:
             engine.add(rule)
     return engine if engine.rules() else None

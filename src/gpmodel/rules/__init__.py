@@ -3,6 +3,7 @@
 from gpmodel.rules.base import Cooldown, Rule, RulesEngine
 from gpmodel.rules.crowd import CrowdRule
 from gpmodel.rules.geofence import Geofence, GeofenceRule
+from gpmodel.rules.weapon import WeaponRule
 
 __all__ = [
     "Cooldown",
@@ -11,4 +12,5 @@ __all__ = [
     "GeofenceRule",
     "Rule",
     "RulesEngine",
+    "WeaponRule",
 ]

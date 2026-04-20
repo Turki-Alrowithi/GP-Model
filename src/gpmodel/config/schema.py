@@ -123,9 +123,21 @@ class CrowdRuleConfig(_Strict):
     cooldown_s: float = Field(default=60.0, ge=0.0)
 
 
+class WeaponRuleConfig(_Strict):
+    enabled: bool = False
+    # Stock YOLO11 classes that *might* look like weapons — poor accuracy
+    # until a specialist model lands in Phase 3.
+    classes: list[str] = Field(default_factory=lambda: ["knife"])
+    min_confidence: float = Field(default=0.55, ge=0.0, le=1.0)
+    min_consecutive_frames: int = Field(default=3, ge=1)
+    severity: Literal["LOW", "MEDIUM", "HIGH", "CRITICAL", "OPERATIONAL"] = "CRITICAL"
+    cooldown_s: float = Field(default=30.0, ge=0.0)
+
+
 class RulesConfig(_Strict):
     geofence: GeofenceRuleConfig = GeofenceRuleConfig()
     crowd: CrowdRuleConfig = CrowdRuleConfig()
+    weapon: WeaponRuleConfig = WeaponRuleConfig()
 
 
 # ── Performance & logging ──────────────────────────────────
