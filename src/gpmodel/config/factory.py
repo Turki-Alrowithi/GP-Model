@@ -10,19 +10,24 @@ from gpmodel.config.schema import (
     AppConfig,
     ByteTrackConfig,
     FileConfig,
+    GeofenceRuleConfig,
     PublishersConfig,
     RtspConfig,
+    RulesConfig,
     SourceConfig,
     WebcamConfig,
     YoloConfig,
 )
 from gpmodel.core.dispatcher import AlertDispatcher
+from gpmodel.core.events import AlertSeverity
 from gpmodel.core.interfaces import Detector, Subscriber, Tracker, VideoSource
 from gpmodel.detectors.yolo import YoloDetector
 from gpmodel.pipeline.engine import InferenceEngine
 from gpmodel.publishers.console import ConsoleSubscriber
 from gpmodel.publishers.jsonl import JSONLFileSubscriber
 from gpmodel.publishers.metrics import MetricsSubscriber
+from gpmodel.rules.base import RulesEngine
+from gpmodel.rules.geofence import Geofence, GeofenceRule
 from gpmodel.sources.file import FileSource
 from gpmodel.sources.rtsp import RtspSource
 from gpmodel.sources.webcam import WebcamSource
@@ -75,6 +80,34 @@ def build_tracker(cfg: ByteTrackConfig) -> Tracker | None:
     )
 
 
+def build_geofence_rule(cfg: GeofenceRuleConfig) -> GeofenceRule | None:
+    if not cfg.enabled or not cfg.zones:
+        return None
+    zones = [
+        Geofence(
+            name=z.name,
+            points=tuple((p[0], p[1]) for p in z.points),
+            normalized=z.normalized,
+        )
+        for z in cfg.zones
+    ]
+    return GeofenceRule(
+        zones=zones,
+        classes=frozenset(cfg.classes),
+        severity=AlertSeverity(cfg.severity),
+        cooldown_s=cfg.cooldown_s,
+        foot_point=cfg.foot_point,
+    )
+
+
+def build_rules(cfg: RulesConfig) -> RulesEngine | None:
+    engine = RulesEngine()
+    geofence = build_geofence_rule(cfg.geofence)
+    if geofence is not None:
+        engine.add(geofence)
+    return engine if engine.rules() else None
+
+
 def build_publishers(
     cfg: PublishersConfig,
 ) -> tuple[list[Subscriber], MetricsSubscriber | None]:
@@ -105,6 +138,7 @@ def build_engine(
     source = build_source(cfg.stream.source, cfg.stream.id)
     detector = build_detector(cfg.detector)
     tracker = build_tracker(cfg.tracker)
+    rules = build_rules(cfg.rules)
 
     subscribers, metrics = build_publishers(cfg.publishers)
     for sub in subscribers:
@@ -116,6 +150,7 @@ def build_engine(
         detector=detector,
         dispatcher=dispatcher,
         tracker=tracker,
+        rules=rules,
         perf_window=cfg.perf.window,
         perf_emit_every=cfg.perf.emit_every,
     )

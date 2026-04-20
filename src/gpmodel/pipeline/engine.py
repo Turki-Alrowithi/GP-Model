@@ -15,6 +15,7 @@ from threading import Event
 from gpmodel.core.dispatcher import AlertDispatcher
 from gpmodel.core.events import DetectionsReady, PerfSampled, StreamStateChanged
 from gpmodel.core.interfaces import Detector, Tracker, VideoSource
+from gpmodel.rules.base import RulesEngine
 from gpmodel.sources.threaded import ThreadedFrameReader
 from gpmodel.telemetry.perf import PerfMeter
 
@@ -37,6 +38,7 @@ class InferenceEngine:
         detector: Detector,
         dispatcher: AlertDispatcher,
         tracker: Tracker | None = None,
+        rules: RulesEngine | None = None,
         perf_window: int = 60,
         perf_emit_every: int = 30,
         threaded_reader: bool = True,
@@ -45,6 +47,7 @@ class InferenceEngine:
         self.source = source
         self.detector = detector
         self.tracker = tracker
+        self.rules = rules
         self.dispatcher = dispatcher
         self._perf = PerfMeter(
             stream_id=stream_id, window=perf_window, emit_every=perf_emit_every
@@ -83,6 +86,7 @@ class InferenceEngine:
                 t0 = time.perf_counter()
                 detections = self.detector.detect(frame)
                 tracks = self.tracker.update(detections, frame) if self.tracker else []
+                alerts = self.rules.evaluate(frame, detections, tracks) if self.rules else []
                 latency_ms = (time.perf_counter() - t0) * 1000.0
                 self._perf.tick(latency_ms)
 
@@ -94,6 +98,8 @@ class InferenceEngine:
                         tracks=tuple(tracks),
                     )
                 )
+                for alert in alerts:
+                    self.dispatcher.publish(alert)
 
                 if self._perf.should_emit():
                     self.dispatcher.publish(

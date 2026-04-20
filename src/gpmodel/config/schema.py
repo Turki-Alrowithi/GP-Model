@@ -94,6 +94,28 @@ class PublishersConfig(_Strict):
     metrics: MetricsPublisherConfig = MetricsPublisherConfig()
 
 
+# ── Rules ──────────────────────────────────────────────────
+class GeofenceZoneConfig(_Strict):
+    name: str
+    # List of (x, y) vertices. Normalized (0-1) by default; set
+    # normalized: false to supply absolute pixel coordinates.
+    points: list[tuple[float, float]] = Field(min_length=3)
+    normalized: bool = True
+
+
+class GeofenceRuleConfig(_Strict):
+    enabled: bool = True
+    zones: list[GeofenceZoneConfig] = Field(default_factory=list)
+    classes: list[str] = Field(default_factory=lambda: ["person"])
+    severity: Literal["LOW", "MEDIUM", "HIGH", "CRITICAL", "OPERATIONAL"] = "HIGH"
+    cooldown_s: float = Field(default=30.0, ge=0.0)
+    foot_point: bool = True
+
+
+class RulesConfig(_Strict):
+    geofence: GeofenceRuleConfig = GeofenceRuleConfig()
+
+
 # ── Performance & logging ──────────────────────────────────
 class PerfConfig(_Strict):
     window: int = Field(default=60, ge=1)
@@ -116,6 +138,7 @@ class AppConfig(_Strict):
     stream: StreamConfig = StreamConfig()
     detector: DetectorConfig = YoloConfig()
     tracker: TrackerConfig = ByteTrackConfig()
+    rules: RulesConfig = RulesConfig()
     publishers: PublishersConfig = PublishersConfig()
     perf: PerfConfig = PerfConfig()
     logging: LoggingConfig = LoggingConfig()

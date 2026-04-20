@@ -32,6 +32,24 @@ tracker:
   fps: 24.0
   minimum_consecutive_frames: 1
 
+rules:
+  geofence:
+    enabled: true
+    classes: [person]
+    severity: HIGH
+    cooldown_s: 30
+    foot_point: true
+    zones:
+      # Demo zone: right-half of the frame. Any person whose feet fall
+      # inside this polygon fires a HIGH alert once per 30 s per track.
+      - name: restricted-east
+        normalized: true
+        points:
+          - [0.5, 0.0]
+          - [1.0, 0.0]
+          - [1.0, 1.0]
+          - [0.5, 1.0]
+
 publishers:
   console:
     enabled: true
