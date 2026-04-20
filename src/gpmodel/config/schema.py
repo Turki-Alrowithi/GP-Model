@@ -134,10 +134,27 @@ class WeaponRuleConfig(_Strict):
     cooldown_s: float = Field(default=30.0, ge=0.0)
 
 
+class IntruderRuleConfig(_Strict):
+    enabled: bool = False
+    # Root folder for authorized people; one subdir per staff member.
+    authorized_dir: Path = Path("data/authorized")
+    # InsightFace model pack.
+    model_name: str = "buffalo_l"
+    # Cosine-similarity threshold above which a face is considered "staff".
+    match_threshold: float = Field(default=0.45, ge=0.0, le=1.0)
+    classes: list[str] = Field(default_factory=lambda: ["person"])
+    min_consecutive_frames: int = Field(default=2, ge=1)
+    indeterminate_retry_every: int = Field(default=15, ge=1)
+    bbox_padding: float = Field(default=0.10, ge=0.0, le=1.0)
+    severity: Literal["LOW", "MEDIUM", "HIGH", "CRITICAL", "OPERATIONAL"] = "HIGH"
+    cooldown_s: float = Field(default=60.0, ge=0.0)
+
+
 class RulesConfig(_Strict):
     geofence: GeofenceRuleConfig = GeofenceRuleConfig()
     crowd: CrowdRuleConfig = CrowdRuleConfig()
     weapon: WeaponRuleConfig = WeaponRuleConfig()
+    intruder: IntruderRuleConfig = IntruderRuleConfig()
 
 
 # ── Performance & logging ──────────────────────────────────

@@ -13,6 +13,7 @@ from gpmodel.config.schema import (
     FileConfig,
     GeofenceRuleConfig,
     GeofenceZoneConfig,
+    IntruderRuleConfig,
     PublishersConfig,
     RtspConfig,
     RulesConfig,
@@ -29,9 +30,12 @@ from gpmodel.pipeline.engine import InferenceEngine
 from gpmodel.publishers.console import ConsoleSubscriber
 from gpmodel.publishers.jsonl import JSONLFileSubscriber
 from gpmodel.publishers.metrics import MetricsSubscriber
+from gpmodel.reid.encoder import InsightFaceEncoder
+from gpmodel.reid.face_db import StaffFaceDB
 from gpmodel.rules.base import RulesEngine
 from gpmodel.rules.crowd import CrowdRule
 from gpmodel.rules.geofence import Geofence, GeofenceRule
+from gpmodel.rules.intruder import IntruderRule
 from gpmodel.rules.weapon import WeaponRule
 from gpmodel.sources.file import FileSource
 from gpmodel.sources.rtsp import RtspSource
@@ -130,12 +134,30 @@ def build_weapon_rule(cfg: WeaponRuleConfig) -> WeaponRule | None:
     )
 
 
+def build_intruder_rule(cfg: IntruderRuleConfig) -> IntruderRule | None:
+    if not cfg.enabled:
+        return None
+    encoder = InsightFaceEncoder(model_name=cfg.model_name)
+    db = StaffFaceDB(encoder=encoder, threshold=cfg.match_threshold)
+    db.enroll_directory(cfg.authorized_dir)
+    return IntruderRule(
+        staff_db=db,
+        classes=frozenset(cfg.classes),
+        min_consecutive_frames=cfg.min_consecutive_frames,
+        indeterminate_retry_every=cfg.indeterminate_retry_every,
+        bbox_padding=cfg.bbox_padding,
+        severity=AlertSeverity(cfg.severity),
+        cooldown_s=cfg.cooldown_s,
+    )
+
+
 def build_rules(cfg: RulesConfig) -> RulesEngine | None:
     engine = RulesEngine()
     for rule in (
         build_geofence_rule(cfg.geofence),
         build_crowd_rule(cfg.crowd),
         build_weapon_rule(cfg.weapon),
+        build_intruder_rule(cfg.intruder),
     ):
         if rule is not None:
             engine.add(rule)
