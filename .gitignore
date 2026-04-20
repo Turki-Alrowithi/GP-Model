@@ -1,37 +1,53 @@
-# Python
+# ── Python ──
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
-dist/
-build/
 *.egg
+build/
+dist/
 .eggs/
 
-# Environment
-.env
+# ── Environments ──
 .venv/
 venv/
 env/
+.env
+.env.local
 
-# IDE
+# ── Tooling ──
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# ── IDE / OS ──
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# Testing
-.pytest_cache/
-htmlcov/
-.coverage
-test.db
-
-# Docker
-*.log
-
-# OS
 .DS_Store
 Thumbs.db
 
-# Alembic
-migrations/versions/*.pyc
+# ── ML artifacts ──
+runs/
+wandb/
+lightning_logs/
+datasets/
+!datasets/.gitkeep
+models/**
+!models/.gitkeep
+*.onnx
+*.mlpackage/
+*.engine
+*.tflite
+*.pt
+
+# ── Project outputs ──
+logs/
+snapshots/
+events.jsonl
