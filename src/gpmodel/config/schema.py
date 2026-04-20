@@ -32,7 +32,15 @@ class FileConfig(_Strict):
     loop: bool = False
 
 
-SourceConfig = WebcamConfig | FileConfig
+class RtspConfig(_Strict):
+    type: Literal["rtsp"] = "rtsp"
+    url: str
+    transport: Literal["tcp", "udp"] = "tcp"
+    reconnect_delay_s: float = 1.0
+    max_reconnect_delay_s: float = 30.0
+
+
+SourceConfig = WebcamConfig | FileConfig | RtspConfig
 
 
 # ── Detector ───────────────────────────────────────────────

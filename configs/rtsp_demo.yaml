@@ -1,0 +1,49 @@
+# ═══════════════════════════════════════════════════════════
+#  GP-Model — Virtual RTSP drone profile
+# ═══════════════════════════════════════════════════════════
+#
+#  Consumes the MediaMTX-served sample clip as if it were a real
+#  drone feed. Start the stack first:
+#      docker compose -f docker/compose.yaml up -d
+#
+#  Then run:
+#      uv run gpmodel --config configs/rtsp_demo.yaml
+#
+
+stream:
+  id: "drone01"
+  source:
+    type: rtsp
+    url: rtsp://localhost:8554/drone01
+    transport: tcp
+
+detector:
+  type: yolo
+  weights: yolo11s.pt
+  device: mps
+  imgsz: 640
+  conf: 0.30
+  iou: 0.45
+
+tracker:
+  enabled: true
+  type: bytetrack
+  fps: 24.0
+  minimum_consecutive_frames: 1
+
+publishers:
+  console:
+    enabled: true
+    print_detections: true
+  jsonl:
+    enabled: false
+  metrics:
+    enabled: true
+
+perf:
+  window: 60
+  emit_every: 30
+
+logging:
+  level: INFO
+  format: console

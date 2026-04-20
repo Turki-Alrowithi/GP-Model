@@ -17,10 +17,12 @@ from gpmodel.config.schema import (
     JSONLPublisherConfig,
     MetricsPublisherConfig,
     PublishersConfig,
+    RtspConfig,
     WebcamConfig,
 )
 from gpmodel.publishers.metrics import MetricsSubscriber
 from gpmodel.sources.file import FileSource
+from gpmodel.sources.rtsp import RtspSource
 from gpmodel.sources.webcam import WebcamSource
 
 
@@ -41,6 +43,15 @@ def test_build_file_source(tmp_path: Path) -> None:
     src = build_source(cfg, "file-A")
     assert isinstance(src, FileSource)
     assert src.loop
+
+
+def test_build_rtsp_source() -> None:
+    cfg = RtspConfig(url="rtsp://cam-07:8554/live", transport="udp")
+    src = build_source(cfg, "drone-07")
+    assert isinstance(src, RtspSource)
+    assert src.url == "rtsp://cam-07:8554/live"
+    assert src.transport == "udp"
+    assert src.stream_id == "drone-07"
 
 
 def test_build_tracker_respects_enabled_flag() -> None:

@@ -11,6 +11,7 @@ from gpmodel.config.schema import (
     ByteTrackConfig,
     FileConfig,
     PublishersConfig,
+    RtspConfig,
     SourceConfig,
     WebcamConfig,
     YoloConfig,
@@ -23,6 +24,7 @@ from gpmodel.publishers.console import ConsoleSubscriber
 from gpmodel.publishers.jsonl import JSONLFileSubscriber
 from gpmodel.publishers.metrics import MetricsSubscriber
 from gpmodel.sources.file import FileSource
+from gpmodel.sources.rtsp import RtspSource
 from gpmodel.sources.webcam import WebcamSource
 from gpmodel.trackers.bytetrack import ByteTrackTracker
 
@@ -39,6 +41,14 @@ def build_source(cfg: SourceConfig, stream_id: str) -> VideoSource:
             )
         case FileConfig():
             return FileSource(path=cfg.path, stream_id=stream_id, loop=cfg.loop)
+        case RtspConfig():
+            return RtspSource(
+                url=cfg.url,
+                stream_id=stream_id,
+                transport=cfg.transport,
+                reconnect_delay_s=cfg.reconnect_delay_s,
+                max_reconnect_delay_s=cfg.max_reconnect_delay_s,
+            )
 
 
 def build_detector(cfg: YoloConfig) -> Detector:

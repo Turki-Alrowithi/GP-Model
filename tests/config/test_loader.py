@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from gpmodel.config.loader import load_config
-from gpmodel.config.schema import AppConfig, FileConfig, WebcamConfig
+from gpmodel.config.schema import AppConfig, FileConfig, RtspConfig, WebcamConfig
 
 
 def test_defaults_when_file_is_empty(tmp_path: Path) -> None:
@@ -65,6 +65,26 @@ stream:
     cfg = load_config(path)
     assert isinstance(cfg.stream.source, FileConfig)
     assert cfg.stream.source.loop
+
+
+def test_loads_rtsp_source_config(tmp_path: Path) -> None:
+    path = tmp_path / "c.yaml"
+    path.write_text(
+        """
+stream:
+  id: "drone-1"
+  source:
+    type: rtsp
+    url: rtsp://localhost:8554/drone01
+    transport: udp
+    reconnect_delay_s: 0.5
+"""
+    )
+    cfg = load_config(path)
+    assert isinstance(cfg.stream.source, RtspConfig)
+    assert cfg.stream.source.url == "rtsp://localhost:8554/drone01"
+    assert cfg.stream.source.transport == "udp"
+    assert cfg.stream.source.reconnect_delay_s == 0.5
 
 
 def test_rejects_unknown_keys(tmp_path: Path) -> None:

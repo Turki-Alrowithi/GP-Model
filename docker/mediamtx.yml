@@ -1,0 +1,30 @@
+# ══════════════════════════════════════════════════════════════
+#  MediaMTX — virtual drone RTSP endpoint
+# ══════════════════════════════════════════════════════════════
+#
+#  Used by docker/compose.yaml. The ffmpeg publisher loops the
+#  bundled sample clip into `drone01`; anything that can read RTSP
+#  (our inference engine, VLC, `ffplay rtsp://localhost:8554/drone01`)
+#  can consume it.
+#
+
+logLevel: info
+logDestinations: [stdout]
+
+# Disable protocols we don't need to keep surface area small.
+rtmp: no
+hls: no
+webrtc: no
+srt: no
+
+rtspAddress: :8554
+
+paths:
+  # A single always-on path; the publisher pushes into it via rtsp://.
+  drone01:
+    source: publisher
+    # Discard backlog when consumers fall behind — we want freshness.
+    sourceOnDemand: no
+
+  # Catch-all for additional streams in the future (drone02, drone03, ...).
+  all_others:
