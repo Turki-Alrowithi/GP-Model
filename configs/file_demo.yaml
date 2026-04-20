@@ -1,0 +1,52 @@
+# ═══════════════════════════════════════════════════════════
+#  GP-Model — File playback profile (deterministic demo)
+# ═══════════════════════════════════════════════════════════
+#
+#  Plays the bundled sample clip on a loop. Useful for headless
+#  smoke tests and regression runs.
+#
+#  Run with:
+#      uv run gpmodel --config configs/file_demo.yaml
+#
+
+stream:
+  id: "file-demo"
+  source:
+    type: file
+    path: assets/samples/drone_01.mp4
+    loop: true
+
+detector:
+  type: yolo
+  weights: yolo11n.pt       # nano — fast for demo runs
+  device: mps
+  imgsz: 640
+  conf: 0.30
+  iou: 0.45
+  classes: null
+  half: false
+
+tracker:
+  enabled: true
+  type: bytetrack
+  fps: 24.0
+  minimum_consecutive_frames: 1
+
+publishers:
+  console:
+    enabled: true
+    print_detections: true
+  jsonl:
+    enabled: false
+    path: logs/events.jsonl
+    include_detection_frames: false
+  metrics:
+    enabled: true
+
+perf:
+  window: 60
+  emit_every: 30
+
+logging:
+  level: INFO
+  format: console

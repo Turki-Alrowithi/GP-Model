@@ -1,0 +1,112 @@
+"""Factory functions — build runtime components from validated config.
+
+Everything that instantiates a concrete class from config lives here,
+so the rest of the code can stay decoupled from the config schema.
+"""
+
+from __future__ import annotations
+
+from gpmodel.config.schema import (
+    AppConfig,
+    ByteTrackConfig,
+    FileConfig,
+    PublishersConfig,
+    SourceConfig,
+    WebcamConfig,
+    YoloConfig,
+)
+from gpmodel.core.dispatcher import AlertDispatcher
+from gpmodel.core.interfaces import Detector, Subscriber, Tracker, VideoSource
+from gpmodel.detectors.yolo import YoloDetector
+from gpmodel.pipeline.engine import InferenceEngine
+from gpmodel.publishers.console import ConsoleSubscriber
+from gpmodel.publishers.jsonl import JSONLFileSubscriber
+from gpmodel.publishers.metrics import MetricsSubscriber
+from gpmodel.sources.file import FileSource
+from gpmodel.sources.webcam import WebcamSource
+from gpmodel.trackers.bytetrack import ByteTrackTracker
+
+
+def build_source(cfg: SourceConfig, stream_id: str) -> VideoSource:
+    match cfg:
+        case WebcamConfig():
+            return WebcamSource(
+                stream_id=stream_id,
+                device_index=cfg.device_index,
+                width=cfg.width,
+                height=cfg.height,
+                fps=cfg.fps,
+            )
+        case FileConfig():
+            return FileSource(path=cfg.path, stream_id=stream_id, loop=cfg.loop)
+
+
+def build_detector(cfg: YoloConfig) -> Detector:
+    return YoloDetector(
+        weights=cfg.weights,
+        device=cfg.device,
+        imgsz=cfg.imgsz,
+        conf=cfg.conf,
+        iou=cfg.iou,
+        classes=cfg.classes,
+        half=cfg.half,
+    )
+
+
+def build_tracker(cfg: ByteTrackConfig) -> Tracker | None:
+    if not cfg.enabled:
+        return None
+    return ByteTrackTracker(
+        fps=cfg.fps,
+        track_activation_threshold=cfg.track_activation_threshold,
+        lost_track_buffer=cfg.lost_track_buffer,
+        minimum_matching_threshold=cfg.minimum_matching_threshold,
+        minimum_consecutive_frames=cfg.minimum_consecutive_frames,
+    )
+
+
+def build_publishers(
+    cfg: PublishersConfig,
+) -> tuple[list[Subscriber], MetricsSubscriber | None]:
+    """Return the full subscriber list plus the metrics one (for summary access)."""
+    subs: list[Subscriber] = []
+    metrics: MetricsSubscriber | None = None
+
+    if cfg.console.enabled:
+        subs.append(ConsoleSubscriber(print_detections=cfg.console.print_detections))
+    if cfg.jsonl.enabled:
+        subs.append(
+            JSONLFileSubscriber(
+                path=cfg.jsonl.path,
+                include_detection_frames=cfg.jsonl.include_detection_frames,
+            )
+        )
+    if cfg.metrics.enabled:
+        metrics = MetricsSubscriber()
+        subs.append(metrics)
+
+    return subs, metrics
+
+
+def build_engine(
+    cfg: AppConfig, dispatcher: AlertDispatcher
+) -> tuple[InferenceEngine, MetricsSubscriber | None]:
+    """Build everything from a validated AppConfig, register subscribers."""
+    source = build_source(cfg.stream.source, cfg.stream.id)
+    detector = build_detector(cfg.detector)
+    tracker = build_tracker(cfg.tracker)
+
+    subscribers, metrics = build_publishers(cfg.publishers)
+    for sub in subscribers:
+        dispatcher.subscribe(sub)
+
+    engine = InferenceEngine(
+        stream_id=cfg.stream.id,
+        source=source,
+        detector=detector,
+        dispatcher=dispatcher,
+        tracker=tracker,
+        perf_window=cfg.perf.window,
+        perf_emit_every=cfg.perf.emit_every,
+    )
+    return engine, metrics

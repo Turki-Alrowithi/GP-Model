@@ -1,0 +1,57 @@
+# ═══════════════════════════════════════════════════════════
+#  GP-Model — Laptop profile (MacBook Pro M-series)
+# ═══════════════════════════════════════════════════════════
+#
+#  Target: 25-30 FPS @ 1080p using MPS/CoreML on Apple Silicon.
+#  Sends detections + alerts + perf to the terminal via rich.
+#
+#  Run with:
+#      uv run gpmodel --config configs/laptop.yaml
+#
+
+stream:
+  id: "laptop-webcam"
+  source:
+    type: webcam
+    device_index: 0
+    width: 1920
+    height: 1080
+    fps: 30
+
+detector:
+  type: yolo
+  weights: yolo11s.pt       # swap to yolo11s.mlpackage after export
+  device: mps               # mps | cpu | cuda
+  imgsz: 640
+  conf: 0.30
+  iou: 0.45
+  classes: null             # e.g. [0, 2] to filter persons + cars
+  half: false
+
+tracker:
+  enabled: true
+  type: bytetrack
+  fps: 30.0
+  track_activation_threshold: 0.25
+  lost_track_buffer: 30
+  minimum_matching_threshold: 0.8
+  minimum_consecutive_frames: 1
+
+publishers:
+  console:
+    enabled: true
+    print_detections: true
+  jsonl:
+    enabled: true
+    path: logs/events.jsonl
+    include_detection_frames: false
+  metrics:
+    enabled: true
+
+perf:
+  window: 60
+  emit_every: 30
+
+logging:
+  level: INFO
+  format: console
