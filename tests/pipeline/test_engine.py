@@ -96,7 +96,7 @@ def test_warmup_runs_before_source_opens() -> None:
     src = FakeSource(count=1)
     det = FakeDetector()
     bus = AlertDispatcher()
-    eng = InferenceEngine("cam-1", src, det, bus)
+    eng = InferenceEngine("cam-1", src, det, bus, threaded_reader=False)
 
     eng.run()
     assert det.warmed
@@ -109,7 +109,7 @@ def test_emits_detectionsready_per_frame() -> None:
     rec = Recorder()
     bus.subscribe(rec)
 
-    InferenceEngine("cam-1", src, det, bus, tracker=FakeTracker()).run()
+    InferenceEngine("cam-1", src, det, bus, tracker=FakeTracker(), threaded_reader=False).run()
 
     det_events = [e for e in rec.events if isinstance(e, DetectionsReady)]
     assert len(det_events) == 3
@@ -124,7 +124,7 @@ def test_emits_stream_state_open_and_closed() -> None:
     rec = Recorder()
     bus.subscribe(rec)
 
-    InferenceEngine("cam-1", src, det, bus).run()
+    InferenceEngine("cam-1", src, det, bus, threaded_reader=False).run()
 
     state_events = [e for e in rec.events if isinstance(e, StreamStateChanged)]
     states = [e.state for e in state_events]
@@ -139,7 +139,7 @@ def test_emits_perf_sampled_on_interval() -> None:
     rec = Recorder()
     bus.subscribe(rec)
 
-    InferenceEngine("cam-1", src, det, bus, perf_emit_every=3).run()
+    InferenceEngine("cam-1", src, det, bus, perf_emit_every=3, threaded_reader=False).run()
 
     perf_events = [e for e in rec.events if isinstance(e, PerfSampled)]
     # 10 frames, emit every 3 → 3 perf events (at frame 3, 6, 9)
@@ -162,7 +162,7 @@ def test_stop_aborts_loop() -> None:
                 if self.seen == 2:
                     eng.stop()
 
-    eng = InferenceEngine("cam-1", src, det, bus)
+    eng = InferenceEngine("cam-1", src, det, bus, threaded_reader=False)
     bus.subscribe(StoppingSubscriber())
     eng.run()
 
@@ -180,7 +180,7 @@ def test_closes_resources_on_error() -> None:
     bus = AlertDispatcher()
     rec = Recorder()
     bus.subscribe(rec)
-    eng = InferenceEngine("cam-1", src, det, bus)
+    eng = InferenceEngine("cam-1", src, det, bus, threaded_reader=False)
 
     with pytest.raises(RuntimeError, match="boom"):
         eng.run()

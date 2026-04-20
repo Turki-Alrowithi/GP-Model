@@ -15,6 +15,7 @@ from threading import Event
 from gpmodel.core.dispatcher import AlertDispatcher
 from gpmodel.core.events import DetectionsReady, PerfSampled, StreamStateChanged
 from gpmodel.core.interfaces import Detector, Tracker, VideoSource
+from gpmodel.sources.threaded import ThreadedFrameReader
 from gpmodel.telemetry.perf import PerfMeter
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ class InferenceEngine:
         tracker: Tracker | None = None,
         perf_window: int = 60,
         perf_emit_every: int = 30,
+        threaded_reader: bool = True,
     ) -> None:
         self.stream_id = stream_id
         self.source = source
@@ -48,6 +50,7 @@ class InferenceEngine:
             stream_id=stream_id, window=perf_window, emit_every=perf_emit_every
         )
         self._stop_event = Event()
+        self._reader = ThreadedFrameReader(source) if threaded_reader else None
 
     # ── Control ─────────────────────────────────────────────
     def stop(self) -> None:
@@ -64,10 +67,15 @@ class InferenceEngine:
         self.detector.warmup()
 
         try:
-            self.source.open()
+            if self._reader is not None:
+                self._reader.start()
+                frame_iter = self._reader.frames()
+            else:
+                self.source.open()
+                frame_iter = self.source.frames()
             self._emit_state("opened")
 
-            for frame in self.source.frames():
+            for frame in frame_iter:
                 if self._stop_event.is_set():
                     logger.info("Engine '%s' stop requested", self.stream_id)
                     break
@@ -97,7 +105,10 @@ class InferenceEngine:
             self._emit_state("error", str(exc))
             raise
         finally:
-            self.source.close()
+            if self._reader is not None:
+                self._reader.stop()
+            else:
+                self.source.close()
             self.detector.close()
             self._emit_state("closed")
             logger.info("Engine '%s' stopped", self.stream_id)
