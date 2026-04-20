@@ -112,8 +112,20 @@ class GeofenceRuleConfig(_Strict):
     foot_point: bool = True
 
 
+class CrowdRuleConfig(_Strict):
+    enabled: bool = False
+    threshold: int = Field(default=5, ge=1)
+    # Optional ROI polygon; None = whole frame.
+    zone: GeofenceZoneConfig | None = None
+    classes: list[str] = Field(default_factory=lambda: ["person"])
+    min_duration_s: float = Field(default=3.0, ge=0.0)
+    severity: Literal["LOW", "MEDIUM", "HIGH", "CRITICAL", "OPERATIONAL"] = "MEDIUM"
+    cooldown_s: float = Field(default=60.0, ge=0.0)
+
+
 class RulesConfig(_Strict):
     geofence: GeofenceRuleConfig = GeofenceRuleConfig()
+    crowd: CrowdRuleConfig = CrowdRuleConfig()
 
 
 # ── Performance & logging ──────────────────────────────────

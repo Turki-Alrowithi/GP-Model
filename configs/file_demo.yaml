@@ -49,6 +49,13 @@ rules:
           - [1.0, 0.0]
           - [1.0, 1.0]
           - [0.5, 1.0]
+  crowd:
+    enabled: true
+    threshold: 3         # 3+ persons trigger a crowd alert
+    classes: [person]
+    severity: MEDIUM
+    min_duration_s: 2.0  # must persist for 2s before firing
+    cooldown_s: 60
 
 publishers:
   console:

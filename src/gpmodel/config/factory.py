@@ -9,8 +9,10 @@ from __future__ import annotations
 from gpmodel.config.schema import (
     AppConfig,
     ByteTrackConfig,
+    CrowdRuleConfig,
     FileConfig,
     GeofenceRuleConfig,
+    GeofenceZoneConfig,
     PublishersConfig,
     RtspConfig,
     RulesConfig,
@@ -27,6 +29,7 @@ from gpmodel.publishers.console import ConsoleSubscriber
 from gpmodel.publishers.jsonl import JSONLFileSubscriber
 from gpmodel.publishers.metrics import MetricsSubscriber
 from gpmodel.rules.base import RulesEngine
+from gpmodel.rules.crowd import CrowdRule
 from gpmodel.rules.geofence import Geofence, GeofenceRule
 from gpmodel.sources.file import FileSource
 from gpmodel.sources.rtsp import RtspSource
@@ -80,19 +83,19 @@ def build_tracker(cfg: ByteTrackConfig) -> Tracker | None:
     )
 
 
+def _zone_to_geofence(cfg: GeofenceZoneConfig) -> Geofence:
+    return Geofence(
+        name=cfg.name,
+        points=tuple((p[0], p[1]) for p in cfg.points),
+        normalized=cfg.normalized,
+    )
+
+
 def build_geofence_rule(cfg: GeofenceRuleConfig) -> GeofenceRule | None:
     if not cfg.enabled or not cfg.zones:
         return None
-    zones = [
-        Geofence(
-            name=z.name,
-            points=tuple((p[0], p[1]) for p in z.points),
-            normalized=z.normalized,
-        )
-        for z in cfg.zones
-    ]
     return GeofenceRule(
-        zones=zones,
+        zones=[_zone_to_geofence(z) for z in cfg.zones],
         classes=frozenset(cfg.classes),
         severity=AlertSeverity(cfg.severity),
         cooldown_s=cfg.cooldown_s,
@@ -100,11 +103,24 @@ def build_geofence_rule(cfg: GeofenceRuleConfig) -> GeofenceRule | None:
     )
 
 
+def build_crowd_rule(cfg: CrowdRuleConfig) -> CrowdRule | None:
+    if not cfg.enabled:
+        return None
+    return CrowdRule(
+        threshold=cfg.threshold,
+        zone=_zone_to_geofence(cfg.zone) if cfg.zone is not None else None,
+        classes=frozenset(cfg.classes),
+        min_duration_s=cfg.min_duration_s,
+        severity=AlertSeverity(cfg.severity),
+        cooldown_s=cfg.cooldown_s,
+    )
+
+
 def build_rules(cfg: RulesConfig) -> RulesEngine | None:
     engine = RulesEngine()
-    geofence = build_geofence_rule(cfg.geofence)
-    if geofence is not None:
-        engine.add(geofence)
+    for rule in (build_geofence_rule(cfg.geofence), build_crowd_rule(cfg.crowd)):
+        if rule is not None:
+            engine.add(rule)
     return engine if engine.rules() else None
 
 
