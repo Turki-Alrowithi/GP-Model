@@ -102,9 +102,7 @@ class GeofenceRule(Rule):
             object.__setattr__(self, "_compiled_for", (width, height))
         return self._compiled
 
-    def _alert(
-        self, frame: Frame, track: Track, zone: str, px: float, py: float
-    ) -> AlertRaised:
+    def _alert(self, frame: Frame, track: Track, zone: str, px: float, py: float) -> AlertRaised:
         return AlertRaised(
             stream_id=frame.stream_id,
             severity=self.severity,

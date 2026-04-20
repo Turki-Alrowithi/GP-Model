@@ -11,9 +11,7 @@ from gpmodel.export.exporter import export_model
 
 
 @patch("ultralytics.YOLO")
-def test_export_moves_artifact_to_models_dir(
-    yolo_cls: MagicMock, tmp_path: Path
-) -> None:
+def test_export_moves_artifact_to_models_dir(yolo_cls: MagicMock, tmp_path: Path) -> None:
     # Arrange: fake weights and a fake artefact Ultralytics "produced".
     weights = tmp_path / "yolo11s.pt"
     weights.touch()

@@ -85,8 +85,9 @@ def test_train_forwards_optional_lr0(yolo_cls: MagicMock, tmp_path: Path) -> Non
     model.train.return_value = MagicMock(save_dir=str(run_dir))
     yolo_cls.return_value = model
 
-    train(base_weights=weights, data=data, lr0=0.001,
-          project=tmp_path / "runs" / "train", name="exp")
+    train(
+        base_weights=weights, data=data, lr0=0.001, project=tmp_path / "runs" / "train", name="exp"
+    )
 
     assert model.train.call_args.kwargs["lr0"] == 0.001
 
@@ -106,5 +107,4 @@ def test_train_raises_when_best_missing(yolo_cls: MagicMock, tmp_path: Path) -> 
     yolo_cls.return_value = model
 
     with pytest.raises(RuntimeError, match=r"best\.pt missing"):
-        train(base_weights=weights, data=data,
-              project=tmp_path / "runs" / "train", name="exp")
+        train(base_weights=weights, data=data, project=tmp_path / "runs" / "train", name="exp")

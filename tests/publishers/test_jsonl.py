@@ -77,7 +77,9 @@ def test_omits_detections_by_default(tmp_path: Path) -> None:
                 stream_id="cam-1",
                 frame=frame,
                 detections=(
-                    Detection(class_id=0, class_name="person", confidence=0.9, bbox=BBox(0, 0, 1, 1)),
+                    Detection(
+                        class_id=0, class_name="person", confidence=0.9, bbox=BBox(0, 0, 1, 1)
+                    ),
                 ),
             )
         )
@@ -99,7 +101,9 @@ def test_includes_detections_when_opted_in(tmp_path: Path) -> None:
                 stream_id="cam-1",
                 frame=frame,
                 detections=(
-                    Detection(class_id=0, class_name="person", confidence=0.9, bbox=BBox(0, 0, 10, 10)),
+                    Detection(
+                        class_id=0, class_name="person", confidence=0.9, bbox=BBox(0, 0, 10, 10)
+                    ),
                 ),
             )
         )

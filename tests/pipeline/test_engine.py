@@ -54,9 +54,7 @@ class FakeDetector:
 
     def detect(self, frame: Frame) -> list[Detection]:
         self.calls += 1
-        return [
-            Detection(class_id=0, class_name="person", confidence=0.9, bbox=BBox(0, 0, 10, 10))
-        ]
+        return [Detection(class_id=0, class_name="person", confidence=0.9, bbox=BBox(0, 0, 10, 10))]
 
     def close(self) -> None: ...
 

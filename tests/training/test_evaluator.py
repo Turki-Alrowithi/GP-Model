@@ -23,9 +23,7 @@ def test_evaluate_extracts_metrics(yolo_cls: MagicMock, tmp_path: Path) -> None:
     model.val.return_value = metrics
     yolo_cls.return_value = model
 
-    r = evaluate(
-        weights=weights, data=data, imgsz=512, batch=8, device="cpu", split="val"
-    )
+    r = evaluate(weights=weights, data=data, imgsz=512, batch=8, device="cpu", split="val")
 
     assert r.map50 == pytest.approx(0.812)
     assert r.map50_95 == pytest.approx(0.574)

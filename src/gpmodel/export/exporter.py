@@ -75,9 +75,7 @@ def export_model(
     _safe_move(produced, target)
 
     logger.info("Exported %s → %s", src.name, target)
-    return ExportResult(
-        path=target, format=fmt, weights=src, imgsz=imgsz, half=half
-    )
+    return ExportResult(path=target, format=fmt, weights=src, imgsz=imgsz, half=half)
 
 
 def _safe_move(src: Path, dest: Path) -> None:

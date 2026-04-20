@@ -39,7 +39,9 @@ def _track(tid: int, cls: str = "person", age: int = 5) -> Track:
     )
 
 
-def _staff_db_with(alice_vec: list[float], encoder: StubEncoder, threshold: float = 0.5) -> StaffFaceDB:
+def _staff_db_with(
+    alice_vec: list[float], encoder: StubEncoder, threshold: float = 0.5
+) -> StaffFaceDB:
     db = StaffFaceDB(encoder=encoder, threshold=threshold)
     # Directly seed embeddings so we don't need filesystem fixtures here.
     db._embeddings["alice"] = [np.array(alice_vec, dtype=np.float32) / np.linalg.norm(alice_vec)]

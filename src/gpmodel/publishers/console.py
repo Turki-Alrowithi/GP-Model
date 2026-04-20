@@ -77,9 +77,7 @@ class ConsoleSubscriber:
     def _print_state(self, e: StreamStateChanged) -> None:
         color = {"opened": "green", "closed": "dim", "error": "red"}.get(e.state, "white")
         suffix = f" — {e.detail}" if e.detail else ""
-        self._console.print(
-            f"[{color}]● stream '{e.stream_id}' {e.state}[/{color}]{suffix}"
-        )
+        self._console.print(f"[{color}]● stream '{e.stream_id}' {e.state}[/{color}]{suffix}")
 
     def _print_detections_summary(self, e: DetectionsReady) -> None:
         if not e.detections and not e.tracks:
@@ -93,8 +91,7 @@ class ConsoleSubscriber:
             for t in e.tracks:
                 by_class.setdefault(t.class_name, []).append(t.track_id)
             summary = ", ".join(
-                f"{cls}#{','.join(str(i) for i in sorted(ids))}"
-                for cls, ids in by_class.items()
+                f"{cls}#{','.join(str(i) for i in sorted(ids))}" for cls, ids in by_class.items()
             )
         else:
             counts: dict[str, int] = {}

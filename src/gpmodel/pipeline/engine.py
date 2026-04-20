@@ -49,9 +49,7 @@ class InferenceEngine:
         self.tracker = tracker
         self.rules = rules
         self.dispatcher = dispatcher
-        self._perf = PerfMeter(
-            stream_id=stream_id, window=perf_window, emit_every=perf_emit_every
-        )
+        self._perf = PerfMeter(stream_id=stream_id, window=perf_window, emit_every=perf_emit_every)
         self._stop_event = Event()
         self._reader = ThreadedFrameReader(source) if threaded_reader else None
 

@@ -33,19 +33,25 @@ def build_parser() -> argparse.ArgumentParser:
         prog="gpmodel-train",
         description="Fine-tune a YOLO model on a custom dataset.",
     )
-    p.add_argument("--weights", "-w", type=Path, default=Path("yolo11s.pt"),
-                   help="Base checkpoint to fine-tune from (default: yolo11s.pt)")
-    p.add_argument("--data", "-d", type=Path, required=True,
-                   help="Ultralytics-format dataset YAML")
+    p.add_argument(
+        "--weights",
+        "-w",
+        type=Path,
+        default=Path("yolo11s.pt"),
+        help="Base checkpoint to fine-tune from (default: yolo11s.pt)",
+    )
+    p.add_argument("--data", "-d", type=Path, required=True, help="Ultralytics-format dataset YAML")
     p.add_argument("--epochs", "-e", type=int, default=50)
     p.add_argument("--imgsz", type=int, default=640)
     p.add_argument("--batch", "-b", type=int, default=16)
-    p.add_argument("--device", default="mps",
-                   help="mps | cpu | cuda | 0 | 0,1 (default: mps)")
+    p.add_argument("--device", default="mps", help="mps | cpu | cuda | 0 | 0,1 (default: mps)")
     p.add_argument("--project", type=Path, default=Path("runs/train"))
     p.add_argument("--name", default=None, help="Run name (default: autoincrement)")
-    p.add_argument("--resume", action="store_true",
-                   help="Resume from --weights (expects a last.pt from a prior run)")
+    p.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from --weights (expects a last.pt from a prior run)",
+    )
     p.add_argument("--patience", type=int, default=20, help="Early stopping patience")
     p.add_argument("--lr0", type=float, default=None, help="Initial learning rate override")
     p.add_argument("--workers", type=int, default=4)

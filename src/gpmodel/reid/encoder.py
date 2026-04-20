@@ -59,9 +59,7 @@ class InsightFaceEncoder:
         try:
             from insightface.app import FaceAnalysis
         except ImportError as e:
-            raise ImportError(
-                "insightface is not installed. Run `uv sync --extra face`."
-            ) from e
+            raise ImportError("insightface is not installed. Run `uv sync --extra face`.") from e
 
         app = FaceAnalysis(name=self.model_name, providers=list(self.providers))
         app.prepare(ctx_id=0, det_size=self.det_size)

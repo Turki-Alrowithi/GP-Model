@@ -78,7 +78,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Export target (default: coreml)",
     )
     pe.add_argument(
-        "--output", "-o", default=Path("models"), type=Path, help="Output directory (default: models/)"
+        "--output",
+        "-o",
+        default=Path("models"),
+        type=Path,
+        help="Output directory (default: models/)",
     )
     pe.add_argument("--imgsz", type=int, default=640, help="Input size (default: 640)")
     pe.add_argument("--half", action="store_true", help="Export with fp16 weights")
@@ -91,11 +95,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     # ── bench ─────────────────────────────────────────────────
     pb = sub.add_parser("bench", help="Benchmark detector throughput on a video clip.")
-    pb.add_argument("--weights", "-w", required=True, type=Path, help="Weights file (.pt, .mlpackage, .onnx)")
+    pb.add_argument(
+        "--weights", "-w", required=True, type=Path, help="Weights file (.pt, .mlpackage, .onnx)"
+    )
     pb.add_argument(
         "--source", "-s", required=True, type=Path, help="Video clip to loop for timing"
     )
-    pb.add_argument("--device", default="mps", choices=["mps", "cpu", "cuda"], help="PyTorch device (ignored for CoreML)")
+    pb.add_argument(
+        "--device",
+        default="mps",
+        choices=["mps", "cpu", "cuda"],
+        help="PyTorch device (ignored for CoreML)",
+    )
     pb.add_argument("--imgsz", type=int, default=640)
     pb.add_argument("--conf", type=float, default=0.30)
     pb.add_argument("--frames", type=int, default=200, help="Timed frames (default: 200)")

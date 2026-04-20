@@ -60,7 +60,12 @@ def train(
 
     logger.info(
         "Training %s on %s for %d epochs (imgsz=%d batch=%d device=%s)",
-        base.name, data_path.name, epochs, imgsz, batch, device,
+        base.name,
+        data_path.name,
+        epochs,
+        imgsz,
+        batch,
+        device,
     )
 
     model = YOLO(str(base))
