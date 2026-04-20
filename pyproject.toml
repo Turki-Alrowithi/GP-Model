@@ -20,6 +20,7 @@ dependencies = [
     "rich>=13.9",
     "shapely>=2.0",
     "supervision>=0.24",
+    "onnxruntime>=1.19",
 ]
 
 [project.optional-dependencies]
@@ -28,7 +29,10 @@ face = [
     "onnxruntime>=1.19",
 ]
 export = [
-    "coremltools>=8.0",
+    # coremltools 9.0 has a torch-converter regression on torch >=2.10
+    # (https://github.com/apple/coremltools/issues/2521). 8.3 is the last
+    # known-good combo on Apple Silicon.
+    "coremltools==8.3.*",
     "onnx>=1.17",
 ]
 
