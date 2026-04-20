@@ -19,6 +19,7 @@ dependencies = [
     "structlog>=24.4",
     "rich>=13.9",
     "shapely>=2.0",
+    "supervision>=0.24",
 ]
 
 [project.optional-dependencies]
