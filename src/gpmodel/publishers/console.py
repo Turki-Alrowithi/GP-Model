@@ -84,11 +84,24 @@ class ConsoleSubscriber:
     def _print_detections_summary(self, e: DetectionsReady) -> None:
         if not e.detections and not e.tracks:
             return
-        counts: dict[str, int] = {}
-        for d in e.detections:
-            counts[d.class_name] = counts.get(d.class_name, 0) + 1
-        summary = ", ".join(f"{k}={v}" for k, v in counts.items()) or "—"
         frame_id = e.frame.frame_id if e.frame else "?"
+
+        # When tracking is on we prefer a per-track summary — this is what
+        # makes "it's the same person" visible to the operator.
+        if e.tracks:
+            by_class: dict[str, list[int]] = {}
+            for t in e.tracks:
+                by_class.setdefault(t.class_name, []).append(t.track_id)
+            summary = ", ".join(
+                f"{cls}#{','.join(str(i) for i in sorted(ids))}"
+                for cls, ids in by_class.items()
+            )
+        else:
+            counts: dict[str, int] = {}
+            for d in e.detections:
+                counts[d.class_name] = counts.get(d.class_name, 0) + 1
+            summary = ", ".join(f"{k}={v}" for k, v in counts.items()) or "—"
+
         self._console.print(
             f"[dim]det[/dim] {e.stream_id} frame#{frame_id}  "
             f"detections={len(e.detections)} tracks={len(e.tracks)}  ({summary})"
