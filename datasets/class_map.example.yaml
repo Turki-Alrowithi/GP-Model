@@ -1,0 +1,31 @@
+# ═══════════════════════════════════════════════════════════
+#  Example class-mapping for `apps/merge_datasets.py`
+# ═══════════════════════════════════════════════════════════
+#
+#  `targets` is the class vocabulary of the MERGED dataset — these
+#  become the class ids in the generated data.yaml.
+#
+#  `mapping` is source-class-name → target-class-name. Source
+#  classes not listed here are silently dropped, which is a clean
+#  way to filter noise categories out of the merge.
+#
+#  Copy this file and adjust for your real datasets.
+
+targets:
+  - firearm
+  - knife
+
+mapping:
+  # Sohas Weapons Dataset
+  pistol: firearm
+  handgun: firearm
+  knife: knife
+  # phone: (dropped — intentionally not in mapping)
+  # card:  (dropped)
+
+  # Olmos et al. Weapons Detection
+  gun: firearm
+  weapon: firearm
+
+  # Objects365 weapon subset
+  baseball_bat: knife    # treat as generic "melee"; remove if you don't want this
