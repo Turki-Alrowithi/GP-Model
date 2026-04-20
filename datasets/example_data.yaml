@@ -1,0 +1,41 @@
+# ═══════════════════════════════════════════════════════════
+#  Example dataset definition (Ultralytics YOLO format)
+# ═══════════════════════════════════════════════════════════
+#
+#  Copy this file, edit paths + class names to match your dataset,
+#  then train with:
+#
+#      uv run python apps/train.py \
+#          --weights yolo11s.pt \
+#          --data datasets/your_dataset.yaml \
+#          --epochs 50
+#
+#  The layout Ultralytics expects on disk:
+#
+#      datasets/your_dataset/
+#      ├── images/
+#      │   ├── train/
+#      │   ├── val/
+#      │   └── test/         # optional
+#      └── labels/
+#          ├── train/         # YOLO-format .txt per image
+#          ├── val/
+#          └── test/
+#
+#  Each label file has one line per object:
+#      <class_id> <cx> <cy> <w> <h>     # all normalized 0-1
+#
+
+# Root directory of the dataset (relative to this file or absolute).
+path: ../datasets/example
+
+# Image directories.
+train: images/train
+val:   images/val
+test:  images/test        # optional; remove if unavailable
+
+# Number of classes + their names in index order.
+nc: 2
+names:
+  - person
+  - knife

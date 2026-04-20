@@ -37,8 +37,11 @@ Thumbs.db
 runs/
 wandb/
 lightning_logs/
-datasets/
+datasets/**
 !datasets/.gitkeep
+!datasets/*.yaml
+!datasets/*.yml
+!datasets/README.md
 models/**
 !models/.gitkeep
 *.onnx
