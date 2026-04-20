@@ -22,6 +22,19 @@ _FORMAT_SUFFIX: dict[str, str] = {
     "torchscript": ".torchscript",
 }
 
+# coremltools' PyTorch frontend lags ~1-2 minor versions behind torch.
+# `coremltools<=8.3` fails on torch>=2.6 with
+#     TypeError: only 0-dimensional arrays can be converted to Python scalars
+# See https://github.com/apple/coremltools/issues/2521. Until coremltools
+# 9.x catches up, the CoreML export requires an older torch in a separate
+# venv. We surface the mismatch with a clear error instead of a mid-export
+# traceback from the C++ converter.
+_MAX_TORCH_FOR_COREML = (2, 6)
+
+
+class CoreMLVersionError(RuntimeError):
+    """Raised when the current torch version is known-incompatible with coremltools."""
+
 
 @dataclass(frozen=True, slots=True)
 class ExportResult:
@@ -58,6 +71,8 @@ def export_model(
     src = Path(weights)
     if not src.exists():
         raise FileNotFoundError(f"Weights not found: {src}")
+    if fmt == "coreml":
+        _check_coreml_compat()
 
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -86,3 +101,23 @@ def _safe_move(src: Path, dest: Path) -> None:
         else:
             dest.unlink()
     shutil.move(str(src), str(dest))
+
+
+def _check_coreml_compat() -> None:
+    """Refuse the export if torch is newer than what coremltools can parse."""
+    import torch
+
+    version_tuple = tuple(int(p) for p in torch.__version__.split("+")[0].split(".")[:2])
+    if version_tuple >= _MAX_TORCH_FOR_COREML:
+        raise CoreMLVersionError(
+            "CoreML export is currently blocked by an upstream coremltools "
+            f"regression on torch>={_MAX_TORCH_FOR_COREML[0]}.{_MAX_TORCH_FOR_COREML[1]} "
+            f"(you are on torch {torch.__version__}).\n\n"
+            "Workaround — create a separate venv for the export:\n"
+            "    uv venv --python 3.11 .venv-coreml\n"
+            "    source .venv-coreml/bin/activate\n"
+            "    uv pip install 'torch<2.6' 'torchvision<0.21' "
+            "'ultralytics>=8.3' 'coremltools==8.3.*'\n"
+            "    python apps/export.py export --weights <your.pt> --format coreml\n\n"
+            "Track upstream progress: https://github.com/apple/coremltools/issues/2521"
+        )

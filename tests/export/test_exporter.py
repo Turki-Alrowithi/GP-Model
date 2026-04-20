@@ -7,9 +7,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from gpmodel.export.exporter import export_model
+from gpmodel.export.exporter import CoreMLVersionError, export_model
 
 
+@patch("torch.__version__", "2.4.0")
 @patch("ultralytics.YOLO")
 def test_export_moves_artifact_to_models_dir(yolo_cls: MagicMock, tmp_path: Path) -> None:
     # Arrange: fake weights and a fake artefact Ultralytics "produced".
@@ -56,7 +57,30 @@ def test_export_overwrites_existing_artifact(yolo_cls: MagicMock, tmp_path: Path
 
 def test_export_raises_on_missing_weights(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
-        export_model(weights=tmp_path / "missing.pt", fmt="coreml")
+        export_model(weights=tmp_path / "missing.pt", fmt="onnx")
+
+
+@patch("torch.__version__", "2.11.0")
+def test_coreml_export_rejects_incompatible_torch(tmp_path: Path) -> None:
+    weights = tmp_path / "yolo11s.pt"
+    weights.touch()
+    with pytest.raises(CoreMLVersionError, match="coremltools"):
+        export_model(weights=weights, fmt="coreml", output_dir=tmp_path / "models")
+
+
+@patch("torch.__version__", "2.4.0")
+@patch("ultralytics.YOLO")
+def test_coreml_export_allowed_on_older_torch(yolo_cls: MagicMock, tmp_path: Path) -> None:
+    weights = tmp_path / "yolo11s.pt"
+    weights.touch()
+    produced = tmp_path / "yolo11s.mlpackage"
+    produced.mkdir()
+    model = MagicMock()
+    model.export.return_value = str(produced)
+    yolo_cls.return_value = model
+
+    result = export_model(weights=weights, fmt="coreml", output_dir=tmp_path / "models")
+    assert result.format == "coreml"
 
 
 @patch("ultralytics.YOLO")

@@ -27,21 +27,26 @@ import sys
 from pathlib import Path
 
 from gpmodel.export.benchmark import benchmark
-from gpmodel.export.exporter import export_model
+from gpmodel.export.exporter import CoreMLVersionError, export_model
 from gpmodel.telemetry.logging import configure_logging
 
 logger = logging.getLogger(__name__)
 
 
 def _cmd_export(args: argparse.Namespace) -> int:
-    result = export_model(
-        weights=args.weights,
-        fmt=args.format,
-        output_dir=args.output,
-        imgsz=args.imgsz,
-        half=args.half,
-        nms=not args.no_nms,
-    )
+    try:
+        result = export_model(
+            weights=args.weights,
+            fmt=args.format,
+            output_dir=args.output,
+            imgsz=args.imgsz,
+            half=args.half,
+            nms=not args.no_nms,
+        )
+    except CoreMLVersionError as e:
+        # Our preflight — print the actionable message, no traceback.
+        print(f"\nCoreML export unavailable:\n\n{e}\n")
+        return 1
     print(f"\nExported: {result.path}\n")
     return 0
 
