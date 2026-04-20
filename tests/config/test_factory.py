@@ -18,6 +18,7 @@ from gpmodel.config.schema import (
     MetricsPublisherConfig,
     PublishersConfig,
     RtspConfig,
+    SahiYoloConfig,
     WebcamConfig,
 )
 from gpmodel.publishers.metrics import MetricsSubscriber
@@ -69,6 +70,25 @@ def test_build_detector_forwards_yolo_args(yolo_cls: MagicMock) -> None:
     det = build_detector(cfg)
     assert det.device == "cpu"
     assert det.imgsz == 320
+
+
+@patch("sahi.AutoDetectionModel")
+def test_build_detector_dispatches_to_sahi(auto_cls: MagicMock) -> None:
+    auto_cls.from_pretrained.return_value = MagicMock(category_mapping={})
+    from gpmodel.config.factory import build_detector
+    from gpmodel.detectors.sahi import SahiYoloDetector
+
+    cfg = SahiYoloConfig(
+        weights="yolo11s.pt",
+        device="cpu",
+        slice_height=512,
+        slice_width=512,
+        overlap_height_ratio=0.25,
+    )
+    det = build_detector(cfg)
+    assert isinstance(det, SahiYoloDetector)
+    assert det.slice_height == 512
+    assert det.overlap_height_ratio == 0.25
 
 
 def test_build_publishers_only_enabled_ones() -> None:

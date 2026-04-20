@@ -10,6 +10,7 @@ from gpmodel.config.schema import (
     AppConfig,
     ByteTrackConfig,
     CrowdRuleConfig,
+    DetectorConfig,
     FileConfig,
     GeofenceRuleConfig,
     GeofenceZoneConfig,
@@ -17,6 +18,7 @@ from gpmodel.config.schema import (
     PublishersConfig,
     RtspConfig,
     RulesConfig,
+    SahiYoloConfig,
     SourceConfig,
     WeaponRuleConfig,
     WebcamConfig,
@@ -25,6 +27,7 @@ from gpmodel.config.schema import (
 from gpmodel.core.dispatcher import AlertDispatcher
 from gpmodel.core.events import AlertSeverity
 from gpmodel.core.interfaces import Detector, Subscriber, Tracker, VideoSource
+from gpmodel.detectors.sahi import SahiYoloDetector
 from gpmodel.detectors.yolo import YoloDetector
 from gpmodel.pipeline.engine import InferenceEngine
 from gpmodel.publishers.console import ConsoleSubscriber
@@ -65,16 +68,32 @@ def build_source(cfg: SourceConfig, stream_id: str) -> VideoSource:
             )
 
 
-def build_detector(cfg: YoloConfig) -> Detector:
-    return YoloDetector(
-        weights=cfg.weights,
-        device=cfg.device,
-        imgsz=cfg.imgsz,
-        conf=cfg.conf,
-        iou=cfg.iou,
-        classes=cfg.classes,
-        half=cfg.half,
-    )
+def build_detector(cfg: DetectorConfig) -> Detector:
+    match cfg:
+        case YoloConfig():
+            return YoloDetector(
+                weights=cfg.weights,
+                device=cfg.device,
+                imgsz=cfg.imgsz,
+                conf=cfg.conf,
+                iou=cfg.iou,
+                classes=cfg.classes,
+                half=cfg.half,
+            )
+        case SahiYoloConfig():
+            return SahiYoloDetector(
+                weights=cfg.weights,
+                device=cfg.device,
+                confidence_threshold=cfg.conf,
+                slice_height=cfg.slice_height,
+                slice_width=cfg.slice_width,
+                overlap_height_ratio=cfg.overlap_height_ratio,
+                overlap_width_ratio=cfg.overlap_width_ratio,
+                postprocess_type=cfg.postprocess_type,
+                postprocess_match_metric=cfg.postprocess_match_metric,
+                postprocess_match_threshold=cfg.postprocess_match_threshold,
+                classes=cfg.classes,
+            )
 
 
 def build_tracker(cfg: ByteTrackConfig) -> Tracker | None:

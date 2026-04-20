@@ -55,7 +55,22 @@ class YoloConfig(_Strict):
     half: bool = False
 
 
-DetectorConfig = YoloConfig
+class SahiYoloConfig(_Strict):
+    type: Literal["sahi_yolo"] = "sahi_yolo"
+    weights: str = "yolo11s.pt"
+    device: Literal["mps", "cpu", "cuda"] = "mps"
+    conf: float = Field(default=0.30, ge=0.0, le=1.0)
+    slice_height: int = Field(default=640, ge=64)
+    slice_width: int = Field(default=640, ge=64)
+    overlap_height_ratio: float = Field(default=0.20, ge=0.0, lt=1.0)
+    overlap_width_ratio: float = Field(default=0.20, ge=0.0, lt=1.0)
+    postprocess_type: Literal["GREEDYNMM", "NMM", "NMS"] = "GREEDYNMM"
+    postprocess_match_metric: Literal["IOS", "IOU"] = "IOS"
+    postprocess_match_threshold: float = Field(default=0.5, ge=0.0, le=1.0)
+    classes: list[int] | None = None
+
+
+DetectorConfig = YoloConfig | SahiYoloConfig
 
 
 # ── Tracker ────────────────────────────────────────────────
@@ -177,7 +192,7 @@ class StreamConfig(_Strict):
 # ── Top-level ──────────────────────────────────────────────
 class AppConfig(_Strict):
     stream: StreamConfig = StreamConfig()
-    detector: DetectorConfig = YoloConfig()
+    detector: DetectorConfig = Field(discriminator="type", default=YoloConfig())
     tracker: TrackerConfig = ByteTrackConfig()
     rules: RulesConfig = RulesConfig()
     publishers: PublishersConfig = PublishersConfig()

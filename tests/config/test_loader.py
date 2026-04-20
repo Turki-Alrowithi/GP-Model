@@ -35,6 +35,7 @@ stream:
     height: 720
     fps: 60
 detector:
+  type: yolo
   weights: yolo11n.pt
   device: cpu
   conf: 0.5
