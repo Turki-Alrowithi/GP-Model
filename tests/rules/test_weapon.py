@@ -9,7 +9,7 @@ from gpmodel.rules.weapon import WeaponRule
 
 def _track(
     tid: int,
-    cls: str = "knife",
+    cls: str = "Knife",
     conf: float = 0.9,
     age: int = 5,
 ) -> Track:
@@ -25,18 +25,18 @@ def _track(
 
 
 def test_fires_on_sustained_weapon(sample_frame: Frame) -> None:
-    rule = WeaponRule(classes=frozenset({"knife"}), min_consecutive_frames=3, min_confidence=0.5)
+    rule = WeaponRule(classes=frozenset({"Knife"}), min_consecutive_frames=3, min_confidence=0.5)
     alerts = rule.evaluate(sample_frame, [], [_track(1)])
 
     assert len(alerts) == 1
     assert alerts[0].rule_type == "weapon_detected"
     assert alerts[0].severity == AlertSeverity.CRITICAL
-    assert alerts[0].evidence["class_name"] == "knife"
+    assert alerts[0].evidence["class_name"] == "Knife"
     assert alerts[0].evidence["track_id"] == 1
 
 
 def test_ignores_non_weapon_classes(sample_frame: Frame) -> None:
-    rule = WeaponRule(classes=frozenset({"knife"}))
+    rule = WeaponRule(classes=frozenset({"Knife"}))
     assert rule.evaluate(sample_frame, [], [_track(1, cls="person")]) == []
 
 
@@ -68,10 +68,10 @@ def test_different_tracks_alert_independently(sample_frame: Frame) -> None:
 
 
 def test_supports_multiple_weapon_classes(sample_frame: Frame) -> None:
-    rule = WeaponRule(classes=frozenset({"knife", "baseball bat"}))
+    rule = WeaponRule(classes=frozenset({"Knife", "Pistol"}))
     alerts = rule.evaluate(
         sample_frame,
         [],
-        [_track(1, cls="knife"), _track(2, cls="baseball bat"), _track(3, cls="person")],
+        [_track(1, cls="Knife"), _track(2, cls="Pistol"), _track(3, cls="person")],
     )
     assert len(alerts) == 2

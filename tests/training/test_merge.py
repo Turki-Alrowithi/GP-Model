@@ -170,12 +170,7 @@ def test_copy_mode_makes_regular_files(tmp_path: Path) -> None:
 
 def test_load_class_map_roundtrip(tmp_path: Path) -> None:
     path = tmp_path / "cm.yaml"
-    path.write_text(
-        "targets: [firearm, knife]\n"
-        "mapping:\n"
-        "  pistol: firearm\n"
-        "  knife: knife\n"
-    )
+    path.write_text("targets: [firearm, knife]\nmapping:\n  pistol: firearm\n  knife: knife\n")
     cm = load_class_map(path)
     assert cm.targets == ["firearm", "knife"]
     assert cm.target_id("pistol") == 0

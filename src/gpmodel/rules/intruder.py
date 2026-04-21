@@ -88,17 +88,20 @@ class IntruderRule(Rule):
 
         alerts: list[AlertRaised] = []
         for track in tracks:
-            if track.class_name not in self.classes:
-                continue
-            if track.age < self.min_consecutive_frames:
-                continue
+            try:
+                if track.class_name not in self.classes:
+                    continue
+                if track.age < self.min_consecutive_frames:
+                    continue
 
-            state = self._classify_if_needed(frame, track)
-            if state != _State.INTRUDER:
-                continue
-            if not self._cooldown.allow((self.name, track.track_id)):
-                continue
-            alerts.append(self._alert(frame, track))
+                state = self._classify_if_needed(frame, track)
+                if state != _State.INTRUDER:
+                    continue
+                if not self._cooldown.allow((self.name, track.track_id)):
+                    continue
+                alerts.append(self._alert(frame, track))
+            except Exception:
+                logger.exception("IntruderRule: skipping track %s", track.track_id)
         return alerts
 
     # ── Classification ────────────────────────────────────

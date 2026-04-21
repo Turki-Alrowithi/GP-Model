@@ -1,13 +1,7 @@
 """Weapon rule — high-severity alert on sustained weapon-class detections.
 
-This rule is infrastructure, not a recommendation to ship into a
-production alerting pipeline *yet*. Stock YOLO11 (COCO-trained)
-has only `knife`, `baseball bat`, and `scissors` — none of which are
-reliable stand-ins for firearms, and all of which trigger on benign
-kitchen / sports / office objects.
-
-The real weapon detector lands in Phase 3 (fine-tuned on Sohas /
-Olmos / Objects365 weapon subsets). Until then, this rule:
+Fine-tuned on a 5-class weapon dataset (Grenade, Knife, Missile, Pistol, Rifle).
+Default class whitelist matches the trained vocabulary exactly.
 
 1. filters to a configurable class whitelist,
 2. requires a high per-detection confidence,
@@ -18,11 +12,14 @@ Olmos / Objects365 weapon subsets). Until then, this rule:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 
 from gpmodel.core.events import AlertRaised, AlertSeverity
 from gpmodel.core.types import Detection, Frame, Track
 from gpmodel.rules.base import Cooldown, Rule
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -39,7 +36,7 @@ class WeaponRule(Rule):
         cooldown_s: per-track TTL.
     """
 
-    classes: frozenset[str] = frozenset({"knife"})
+    classes: frozenset[str] = frozenset({"Grenade", "Knife", "Missile", "Pistol", "Rifle"})
     min_confidence: float = 0.55
     min_consecutive_frames: int = 3
     severity: AlertSeverity = AlertSeverity.CRITICAL
@@ -62,15 +59,18 @@ class WeaponRule(Rule):
 
         alerts: list[AlertRaised] = []
         for track in tracks:
-            if track.class_name not in self.classes:
-                continue
-            if track.confidence < self.min_confidence:
-                continue
-            if track.age < self.min_consecutive_frames:
-                continue
-            if not self._cooldown.allow((self.name, track.track_id)):
-                continue
-            alerts.append(self._alert(frame, track))
+            try:
+                if track.class_name not in self.classes:
+                    continue
+                if track.confidence < self.min_confidence:
+                    continue
+                if track.age < self.min_consecutive_frames:
+                    continue
+                if not self._cooldown.allow((self.name, track.track_id)):
+                    continue
+                alerts.append(self._alert(frame, track))
+            except Exception:
+                logger.exception("WeaponRule: skipping track %s", track.track_id)
         return alerts
 
     def _alert(self, frame: Frame, track: Track) -> AlertRaised:

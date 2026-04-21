@@ -102,7 +102,10 @@ def merge_datasets(
     data_yaml_path = _write_merged_yaml(out_root, class_map)
     logger.info(
         "Merge complete: %d images, %d labels, %d dropped class names. data.yaml=%s",
-        images_linked, labels_written, len(dropped), data_yaml_path,
+        images_linked,
+        labels_written,
+        len(dropped),
+        data_yaml_path,
     )
     return MergeStats(
         images_linked=images_linked,

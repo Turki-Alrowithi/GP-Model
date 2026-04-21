@@ -98,11 +98,15 @@ class SahiYoloDetector:
             if self.classes is not None and class_id not in self.classes:
                 continue
             bbox = p.bbox  # SAHI BoundingBox (minx, miny, maxx, maxy) via .to_xyxy()
-            xyxy = bbox.to_xyxy() if hasattr(bbox, "to_xyxy") else (
-                bbox.minx,
-                bbox.miny,
-                bbox.maxx,
-                bbox.maxy,
+            xyxy = (
+                bbox.to_xyxy()
+                if hasattr(bbox, "to_xyxy")
+                else (
+                    bbox.minx,
+                    bbox.miny,
+                    bbox.maxx,
+                    bbox.maxy,
+                )
             )
             out.append(
                 Detection(

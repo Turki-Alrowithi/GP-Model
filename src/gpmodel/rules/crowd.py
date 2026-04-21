@@ -7,6 +7,7 @@ drone footage dense enough to justify them.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -17,6 +18,8 @@ from gpmodel.core.events import AlertRaised, AlertSeverity
 from gpmodel.core.types import Detection, Frame, Track
 from gpmodel.rules.base import Cooldown, Rule
 from gpmodel.rules.geofence import Geofence
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -55,7 +58,11 @@ class CrowdRule(Rule):
         detections: list[Detection],
         tracks: list[Track],
     ) -> list[AlertRaised]:
-        poly = self._get_zone(frame.width, frame.height)
+        try:
+            poly = self._get_zone(frame.width, frame.height)
+        except Exception:
+            logger.exception("CrowdRule: failed to compile zone")
+            return []
         relevant = self._filter(tracks, poly)
         count = len(relevant)
 

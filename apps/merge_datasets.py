@@ -29,14 +29,29 @@ def build_parser() -> argparse.ArgumentParser:
         prog="gpmodel-merge",
         description="Merge multiple YOLO-format datasets with class remapping.",
     )
-    p.add_argument("--sources", "-s", type=Path, nargs="+", required=True,
-                   help="One or more source dataset YAMLs")
-    p.add_argument("--mapping", "-m", type=Path, required=True,
-                   help="Class-mapping YAML (see datasets/class_map.example.yaml)")
-    p.add_argument("--output", "-o", type=Path, required=True,
-                   help="Output directory for the merged dataset")
-    p.add_argument("--copy", action="store_true",
-                   help="Copy images instead of symlinking (disk-heavy; useful for Colab/Drive)")
+    p.add_argument(
+        "--sources",
+        "-s",
+        type=Path,
+        nargs="+",
+        required=True,
+        help="One or more source dataset YAMLs",
+    )
+    p.add_argument(
+        "--mapping",
+        "-m",
+        type=Path,
+        required=True,
+        help="Class-mapping YAML (see datasets/class_map.example.yaml)",
+    )
+    p.add_argument(
+        "--output", "-o", type=Path, required=True, help="Output directory for the merged dataset"
+    )
+    p.add_argument(
+        "--copy",
+        action="store_true",
+        help="Copy images instead of symlinking (disk-heavy; useful for Colab/Drive)",
+    )
     return p
 
 

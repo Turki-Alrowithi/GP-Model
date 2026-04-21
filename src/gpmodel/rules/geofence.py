@@ -11,6 +11,7 @@ so the same config survives resolution changes.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
@@ -19,6 +20,8 @@ from shapely.geometry import Point, Polygon
 from gpmodel.core.events import AlertRaised, AlertSeverity
 from gpmodel.core.types import Detection, Frame, Track
 from gpmodel.rules.base import Cooldown, Rule
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,16 +80,19 @@ class GeofenceRule(Rule):
         alerts: list[AlertRaised] = []
 
         for track in tracks:
-            if self.classes and track.class_name not in self.classes:
-                continue
-            px, py = self._probe_point(track)
-            point = Point(px, py)
-            for name, poly in polys.items():
-                if not poly.contains(point):
+            try:
+                if self.classes and track.class_name not in self.classes:
                     continue
-                if not self._cooldown.allow((self.name, track.track_id, name)):
-                    continue
-                alerts.append(self._alert(frame, track, name, px, py))
+                px, py = self._probe_point(track)
+                point = Point(px, py)
+                for name, poly in polys.items():
+                    if not poly.contains(point):
+                        continue
+                    if not self._cooldown.allow((self.name, track.track_id, name)):
+                        continue
+                    alerts.append(self._alert(frame, track, name, px, py))
+            except Exception:
+                logger.exception("GeofenceRule: skipping track %s", track.track_id)
         return alerts
 
     # ── Internals ──────────────────────────────────────────
